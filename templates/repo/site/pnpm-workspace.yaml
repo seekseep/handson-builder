@@ -1,0 +1,7 @@
+# esbuild は postinstall でプラットフォーム用バイナリを配置するため、
+# ビルドスクリプトの実行を許可する（pnpm は既定でブロックし、ブロックされたままだと
+# `pnpm run build` が依存チェックの段階で exit 1 になる）。
+#
+# pnpm 11 の書式。`onlyBuiltDependencies`（pnpm 10 の書式）は読まれない。
+allowBuilds:
+  esbuild: true

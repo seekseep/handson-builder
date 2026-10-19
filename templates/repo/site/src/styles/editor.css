@@ -1,0 +1,214 @@
+/* `::codeview` が生成する簡易エディタ UI（remark-editor.mjs の <section class="editor">）。
+   左=ファイル一覧、右=コード。ヘッダに ZIP ダウンロードボタン。
+   `::preview` が生成するライブプレビュー（.lecture-preview）もここで装飾する。 */
+
+.editor {
+  margin: 2rem 0;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background-color: var(--sl-color-gray-6);
+}
+
+.editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.editor__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--sl-color-white);
+}
+
+.editor__title::before {
+  content: '';
+  width: 1.05em;
+  height: 1.05em;
+  background-color: var(--sl-color-accent);
+  -webkit-mask: var(--flag-icon) center / contain no-repeat;
+  mask: var(--flag-icon) center / contain no-repeat;
+  --flag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/%3E%3Cline x1='4' y1='22' x2='4' y2='15'/%3E%3C/svg%3E");
+}
+
+/* ヘッダ内のダウンロードボタンはコンパクトに。 */
+.editor__header .download-button {
+  margin: 0;
+  padding: 0.45rem 0.9rem;
+  font-size: var(--sl-text-sm);
+}
+
+.editor__body {
+  display: grid;
+  margin-top: 0;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+}
+
+/* 左: ファイル一覧。行（＝ファイル）を枠にぴったり揃える（インセットのずれを作らない）。 */
+.editor__files {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--sl-color-gray-5);
+  background-color: var(--sl-color-black);
+  padding: 0;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.editor__file {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--sl-color-gray-2);
+  text-align: left;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0;
+  font-family: var(--sl-font-mono, monospace);
+  font-size: var(--sl-text-xs);
+  white-space: nowrap;
+  cursor: pointer;
+  margin: 0;
+}
+
+.editor__file:hover {
+  background-color: var(--sl-color-gray-5);
+  color: var(--sl-color-white);
+}
+
+.editor__file.is-active {
+  background-color: var(--sl-color-accent);
+  color: #fff;
+}
+
+/* 右: コード */
+.editor__code {
+  min-width: 0; /* グリッド内で横スクロールを許可する */
+  margin-top: 0;
+}
+
+.editor__pane {
+  display: none;
+  margin-top: 0;
+}
+
+.editor__pane.is-active {
+  display: block;
+}
+
+/* ペイン内のコードブロックの外側マージンを詰める。 */
+.editor__pane > :first-child {
+  margin: 0;
+  border-radius: 0;
+}
+
+.editor__pane pre {
+  border-radius: 0;
+}
+
+/* Expressive Code の空のフレームヘッダ（title 無しの figcaption）を隠す。
+   空の帯が「段」として見えてしまうため。 */
+.editor__pane .expressive-code .frame > figcaption.header {
+  display: none;
+}
+
+/* 行番号。EC は各行を <div class="ec-line"><div class="code">…</div></div> で出力するので、
+   カウンタで行番号を振り、コード先頭にガター風の番号を差し込む。 */
+.editor__pane .expressive-code code {
+  counter-reset: ededitor__codeitor-ln;
+  padding-top: 0;
+}
+
+.editor__pane .ec-line {
+  counter-increment: editor-ln;
+}
+
+.editor__pane .ec-line > .code::before {
+  content: counter(editor-ln);
+  display: inline-block;
+  width: 2.5ch;
+  margin-right: 1.25ch;
+  text-align: right;
+  color: var(--sl-color-gray-4);
+  user-select: none;
+}
+
+/* 画面が狭いときは縦積み（ファイル一覧を上、コードを下）。 */
+@media (max-width: 640px) {
+  .editor__body {
+    grid-template-columns: 1fr;
+  }
+  .editor__files {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+}
+
+/* `::preview` のライブプレビュー。 */
+.lecture-preview {
+  margin: 1.5rem 0;
+  padding: 0;
+}
+
+.lecture-preview__bar {
+  width: 720px;
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* 再読み込みボタンと「新しいタブで開く」リンクは見た目をそろえる。
+   後者は実リンクなので <a>。開発者ツールを開いて試す節で使う。 */
+.lecture-preview__reload,
+.lecture-preview__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-white);
+  background: var(--sl-color-gray-6);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lecture-preview__reload:hover,
+.lecture-preview__open:hover {
+  background: var(--sl-color-gray-5);
+  color: var(--sl-color-white);
+}
+
+/* 外部リンク扱いのアイコン（rehype-external-links）は付けない。 */
+.lecture-preview__open::after {
+  content: none;
+}
+
+.lecture-preview__frame {
+  display: block;
+  box-sizing: content-box; /* border 分を寸法に含めず、内部ビューポートを canvas と一致させる */
+  width: 720px;
+  max-width: 100%;
+  height: 480px;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  background: #fdf6e3;
+}
+
+.lecture-preview__caption {
+  margin-top: 0.5rem;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-2);
+}

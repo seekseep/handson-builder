@@ -1,0 +1,6 @@
+# ローカル開発用のシークレット（wrangler dev が読み込む）。
+# このファイルをコピーして `.dev.vars` を作り、値を書く。`.dev.vars` は .gitignore 済み。
+# 本番は `wrangler secret put <NAME>` で登録する（コードやリポジトリに実値を書かない）。
+#
+# 例:
+# TURNSTILE_SECRET_KEY=xxxxxxxxxxxxxxxx

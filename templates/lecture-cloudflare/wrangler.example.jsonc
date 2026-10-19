@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // 受講者は「あなたの名前」を自分用に書き換える（他の人と衝突しない一意な名前にする）。
+  "name": "__APP_NAME__-あなたの名前-__LECTURE_SLUG__",
+  "main": "src/index.js",
+  "compatibility_date": "2026-06-01",
+  "observability": { "enabled": true },
+  // D1 を使わないレクチャーでは d1_databases ごと削除する。
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "__DB_NAME__"
+      // `npm run db:create` で表示された database_id をここに貼る:
+      // "database_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    }
+  ]
+  // R2 を使うレクチャーでは r2_buckets を足す:
+  // "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "__BUCKET_NAME__" }]
+}

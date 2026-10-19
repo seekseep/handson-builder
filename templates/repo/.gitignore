@@ -1,0 +1,27 @@
+node_modules/
+.DS_Store
+
+# 環境変数（Docker + Postgres 系のとき）
+.env
+.env.local
+
+# Cloudflare / wrangler（Cloudflare 系のとき）
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# 受講者が各自コピーして名前を入れる設定はテンプレ(wrangler.example.jsonc)だけ追跡する。
+# 実ファイルはレクチャーごとに .gitignore する（例: sections/03-build-app/02-d1/wrangler.jsonc）。
+
+# secrets
+*.pem
+*.key
+
+# Astro / site
+site/dist/
+site/.astro/
+site/src/content/docs/
+
+# 生成物: 各レクチャーのプロジェクト ZIP（build-downloads.mjs）
+site/public/downloads/

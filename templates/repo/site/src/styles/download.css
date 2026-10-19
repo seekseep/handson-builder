@@ -1,0 +1,71 @@
+/* 大きなダウンロードボタン（remark-download.mjs が生成する `.download-button`）。
+   アクセントカラーの塗り、ダウンロードアイコン付き。ライト/ダーク両対応。 */
+
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1.25rem 0;
+  padding: 0.85rem 1.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--sl-color-accent);
+  color: #fff;
+  font-size: var(--sl-text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.download-button:hover {
+  background-color: var(--sl-color-accent-high);
+  color: #fff;
+  text-decoration: none;
+}
+
+.download-button:active {
+  transform: translateY(1px);
+}
+
+.download-button:focus-visible {
+  outline: 2px solid var(--sl-color-accent-high);
+  outline-offset: 2px;
+}
+
+/* ダウンロード（トレイに下矢印）アイコン。currentColor で塗るため mask で描画。 */
+.download-button__icon {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  background-color: currentColor;
+  -webkit-mask: var(--download-icon) center / contain no-repeat;
+  mask: var(--download-icon) center / contain no-repeat;
+  --download-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E");
+}
+
+/* `::assets` が生成する素材ダウンロード（sentinels.mjs の <div class="assets-download">）。
+   ボタンの下に、ZIP の中身のファイル名を小さく並べる。 */
+
+.assets-download {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.6rem;
+  background-color: var(--sl-color-gray-6);
+}
+
+.assets-download .download-button {
+  margin: 0.5rem 0 0;
+}
+
+.assets-download__files {
+  margin-top: 0.75rem;
+  font-size: var(--sl-text-sm);
+  color: var(--sl-color-gray-2);
+  line-height: 1.8;
+}
+
+.assets-download__files code {
+  font-size: var(--sl-text-xs);
+}

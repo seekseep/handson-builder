@@ -1,0 +1,28 @@
+/* `:::code` ディレクティブ（remark-code.mjs が生成する `.lecture-code`）。
+   中身は Expressive Code のフレームなので、ここではラベル（書く場所の説明）と
+   フレームとの間隔だけを整える。行番号そのものの装飾は ec-line-numbers.mjs 側。 */
+
+.lecture-code {
+  margin: 1.5rem 0;
+}
+
+/* `:::code[create の中（いちばん最初）]` のラベル。
+   コードのファイル名タブの真上に、小さく添える。 */
+.lecture-code-note {
+  margin: 0 0 0.35rem;
+  padding-inline-start: 0.15rem;
+  font-size: var(--sl-text-sm);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--sl-color-gray-2);
+}
+
+/* ラベルの直後に来る Expressive Code のフレームは、上の余白を詰めて
+   ラベルと 1 つのまとまりに見せる。 */
+.lecture-code .expressive-code {
+  margin-top: 0;
+}
+
+.lecture-code-note code {
+  font-size: var(--sl-text-xs);
+}

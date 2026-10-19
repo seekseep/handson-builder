@@ -1,0 +1,10 @@
+node_modules/
+
+# wrangler のローカル状態・シークレット
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# 受講者が各自コピーして名前を入れる設定。テンプレ(wrangler.example.jsonc)だけ追跡する。
+wrangler.jsonc

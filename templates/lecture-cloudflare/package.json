@@ -1,0 +1,20 @@
+{
+  "name": "__LECTURE_NAME__",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "front": "wrangler pages dev ./public --port 8788",
+    "db:create": "wrangler d1 create __DB_NAME__",
+    "db:setup": "wrangler d1 execute __DB_NAME__ --local --file=./schema.sql",
+    "db:setup:remote": "wrangler d1 execute __DB_NAME__ --remote --file=./schema.sql"
+  },
+  "dependencies": {
+    "hono": "^4.12.31"
+  },
+  "devDependencies": {
+    "wrangler": "^4.112.0"
+  }
+}
