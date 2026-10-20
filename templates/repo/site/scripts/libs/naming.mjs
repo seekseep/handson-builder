@@ -48,6 +48,14 @@ export function zipBasenameFor(sec, lec) {
   return `${sec}-${lec}.zip`;
 }
 
+/**
+ * 環境ごとの配布 ZIP のファイル名（`<sec>-<lec>-excel.zip` / `<sec>-<lec>-sheets.zip`）。
+ * Office マクロ系で、Excel には vba/、スプレッドシートには gas/ だけを入れる。
+ */
+export function platformZipBasenameFor(sec, lec, platform) {
+  return `${sec}-${lec}-${platform}.zip`;
+}
+
 /** サイト上の配布 ZIP への URL（`<base>/downloads/<sec>-<lec>.zip`）。 */
 export function downloadUrlFor(base, sec, lec) {
   return `${base}/downloads/${zipBasenameFor(sec, lec)}`;

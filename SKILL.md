@@ -1,6 +1,6 @@
 ---
 name: handson-builder
-description: 勉強会・ハンズオン教材リポジトリをゼロから組み立てるスキル。sections/ に「動かせるサンプルアプリ + 説明マークダウン」を、site/ にそれらを取り込んだ @astrojs/starlight サイトを作り、GitHub Actions で GitHub Pages にデプロイするところまでを一気通貫で用意する。サンプルアプリのスタックは3択（Cloudflare 系: Pages/Workers/D1/R2 + wrangler、Docker なし ／ Docker + Hono + PostgreSQL 生SQL ／ 静的ブラウザアプリ: CDN 読み込みでビルドなし）から選べる。各レクチャーは ZIP で配布でき、素材だけの ZIP も出せる。本文には完成コードの簡易エディタ（::codeview）と、その場で遊べるライブプレビュー（::preview）を埋め込める。図は genfig で作る。「○○の勉強会教材を作って」「ハンズオンリポジトリを作りたい」「セクション＋レクチャー形式の教材を scaffold して」のような依頼で発火。seekseep/cloudflare-introduction-handson と seekseep/slingshot-game-handson の構成を雛形にしている。
+description: 勉強会・ハンズオン教材リポジトリをゼロから組み立てるスキル。sections/ に「動かせるサンプルアプリ + 説明マークダウン」を、site/ にそれらを取り込んだ @astrojs/starlight サイトを作り、GitHub Actions で GitHub Pages にデプロイするところまでを一気通貫で用意する。サンプルアプリのスタックは4択（Cloudflare 系: Pages/Workers/D1/R2 + wrangler、Docker なし ／ Docker + Hono + PostgreSQL 生SQL ／ 静的ブラウザアプリ: CDN 読み込みでビルドなし ／ Office マクロ系: Excel VBA を主に Google スプレッドシートの Apps Script を併記、練習用 .xlsx を配布）から選べる。各レクチャーは ZIP で配布でき、素材だけの ZIP も出せる。本文には完成コードの簡易エディタ（::codeview）と、その場で遊べるライブプレビュー（::preview）を埋め込める。Office マクロ系では、ナビゲーションバーで Excel ／ スプレッドシートを切り替えて手順とコードを出し分ける仕組み（:::::platform）と、練習用ブックを描いた表計算のデモ（::sheetcode / ::::sheetdemo）も使える。図は genfig で作る。「○○の勉強会教材を作って」「ハンズオンリポジトリを作りたい」「セクション＋レクチャー形式の教材を scaffold して」「VBA（Excel マクロ）のハンズオンを作って」のような依頼で発火。seekseep/cloudflare-introduction-handson と seekseep/slingshot-game-handson の構成を雛形にしている。
 ---
 
 # handson-builder
@@ -28,8 +28,7 @@ Starlight 製の解説サイト、GitHub Pages への自動デプロイまでを
 │   ├── README.md              # セクション/レクチャー一覧（docs: true → /getting-started/）
 │   ├── TOOLS.md               # セットアップ: 開発ツール（docs: true）
 │   ├── DOCKER.md / HOST.md    # セットアップ（Docker+Postgres 系のときだけ残す）
-│   └── <NN-section>/          # セクション（例: 01-basics/）
-│       ├── README.md          # セクション概要（docs: true → /<section>/）
+│   └── <NN-section>/          # セクション（例: 01-basics/）。README は置かない（レクチャーだけを並べる）
 │       └── <NN-lecture>/      # レクチャー = 1 つの動くサンプル
 │           ├── package.json   # project 方式（Cloudflare 系 / Docker+Postgres 系）のとき
 │           ├── README.md      # プロジェクト説明（起動方法・構成）
@@ -94,7 +93,7 @@ Starlight 製の解説サイト、GitHub Pages への自動デプロイまでを
 - 既存の教材リポジトリにレクチャーを 1 つ足すだけ → このスキルの「レクチャーを追加する」節だけ参照
 - 静的なスライド資料だけ作りたい → Starlight サイト構築の重さに見合わない
 
-## 技術スタック（3 択）
+## 技術スタック（4 択）
 
 サンプルアプリのスタックは次のどれかを **要件確認時に選ぶ**（後述の 0 節）。1 リポジトリ内では統一し、
 混在させない。共通ルール（JS ESM・TS 不使用・レクチャーは npm・サイトは pnpm + Starlight）は
@@ -131,6 +130,37 @@ Starlight 製の解説サイト、GitHub Pages への自動デプロイまでを
 - 解説用の小さなデモは **`<lec>/demos/<name>/index.html`**（複数可・ZIP には入らない）
 - テンプレ: `templates/lecture-static-browser/`
 
+### Office マクロ系（Excel VBA ＋ Google Apps Script）
+
+Excel のマクロ（VBA）が題材のとき。基本は Excel で書き、同じ課題を Google スプレッドシート
+（Apps Script / GAS）でも進められるようにする。雛形は seekseep/excel-and-vba-handson。
+
+- 動くコードは **`<lec>/example/`** に置く。`vba/*.bas`（VBA）・`gas/*.gs`（GAS）・`data/*.xlsx`
+  （練習用ブック）。`package.json` は置かない。中身は **その節を終えた時点の完成コード** で、
+  次の節は前の節の `example/` をコピーして差分を足す
+- 練習用ブックは **マクロを含まない `.xlsx`** を `tools/build_workbooks.py`（openpyxl）で生成する。
+  出所の分からないマクロ付きブックを開かせないため。`.xlsx` はスプレッドシートにもアップロードできる
+- `.bas` は UTF-8 / LF で書き、**`Attribute VB_Name` 行を書かない**（本文からコピーして VBE に貼ると
+  構文エラーになる）。ZIP 化のときに `build-downloads.mjs` が VB_Name を足し、CP932 ＋ CRLF に変換する
+  （日本語版 VBE でインポートしても文字化けしない）
+- 配布 ZIP のルートは `<lec>/`（節ごとに独立）
+- 環境で手順やコードが分かれる箇所だけを **`:::::platform`** で囲み、中に `::::excel` / `::::sheets`
+  を置く。外側ほどコロンを多くする（`:::::platform` > `::::excel` > `:::code` / `:::warning`）
+- GAS は VBA と 1 対 1 で読み比べられる形にする（セルを 1 つずつ読み書きする）
+- 環境の切り替えは **ナビゲーションバーの選択欄だけ**（`src/components/ThemeSelect.astro`）。本文のブロックには
+  タブを出さず、選んでいる環境の中身だけを表示する。進め方のページ（`sections/README.md`）の冒頭に
+  `::platform-choice` を置き、最初に環境を選んでもらう
+- シートを見せたいときは **`::sheetcode`**（コードと練習用ブックのシートを左右に並べる）と
+  **`::::sheetdemo`**（実行前のシートを描き、▶ 実行で結果の値に切り替える。コードは動かさない）。
+  **各節に `::::sheetdemo` を 1 つ以上置く**。`macro` を付けると、Excel は「開発」→「マクロ」の一覧から、
+  GAS は Apps Script エディタの関数の選択欄から実行する実際の操作をなぞる。書き方の一覧は
+  `references/conventions.md` の「本文センチネル」
+- 節は「手順 → 動かしてみる（実行手順 ＋ `::::sheetdemo`）→ `::codeview` → `:::faq`」の順で締める。
+  よくある質問は生の `<details>` ではなく `:::faq` で書く
+- 準備の章（`sections/00-setup/` の 01-excel / 02-sheets / 03-basics）と `tools/build_workbooks.py` は
+  `templates/office/` にある
+- テンプレ: `templates/lecture-office-macro/`
+
 Web アプリ以外（CLI、データ処理など）が題材の場合も、「動く / sections に置く / LECTURE.md を書く /
 docs: true で site に載る」という骨格は同じ。アプリ部分だけ題材に合わせて差し替える。
 
@@ -142,8 +172,8 @@ docs: true で site に載る」という骨格は同じ。アプリ部分だけ
 
 - **テーマ / タイトル**（例: 「PostgreSQL 入門ハンズオン」）と 1〜2 文の説明
 - **GitHub のユーザー/Org 名とリポジトリ名**（`astro.config.mjs` の `site` / `base`、各種リンクに使う）
-- **スタックの選択**（Cloudflare 系 / Docker + PostgreSQL 系 / 静的ブラウザアプリ系。
-  上記「技術スタック（3 択）」）
+- **スタックの選択**（Cloudflare 系 / Docker + PostgreSQL 系 / 静的ブラウザアプリ系 / Office マクロ系。
+  上記「技術スタック（4 択）」）
 - **セクション / レクチャーの構成案**（最初は 1 セクション 1 レクチャーから始めてもよい）
 - サンプルが **DB を使うか**（Cloudflare 系なら D1、Docker 系なら PostgreSQL。静的系は該当なし）
 
@@ -178,6 +208,21 @@ grep -rl '__REPO_NAME__\|__GH_USER__\|__SITE_TITLE__\|__SITE_DESC__\|__REPO_URL_
 `astro.config.mjs` から `base` と `repoUrl` 定数（テンプレで `__REPO_URL__`）を読む（libs/astro-config.mjs）
 ので、リポジトリ URL は一箇所直せばよい。
 
+「過去のハンズオン」のページ（`sections/PAST-HANDSON.md` → `/past-handson/`。サイドバーの一番下）には、
+同じ作者の公開中のハンズオンを新しい順に並べる。トップページには、このページへのリンクだけを書く。GitHub Pages が有効な public リポジトリだけを載せ、題名はサイトの `<title>` か
+README の見出しから取る（説明はリポジトリの description）。表示を確認できないサイトは載せない。
+
+```bash
+gh repo list <GH_USER> --limit 200 --visibility public --json name,description,pushedAt \
+  --jq '.[] | select(.name | test("handson")) | [.pushedAt[:10], .name, .description] | @tsv' | sort -r
+gh api repos/<GH_USER>/<name>/pages --jq .html_url   # 404 なら Pages 無し
+```
+
+Office マクロ系のときは、さらに `templates/office/sections/*` を `sections/` に、
+`templates/office/tools/` をリポジトリ直下にコピーし、`sections/DOCKER.md` / `HOST.md` / `TOOLS.md`
+を消す。`astro.config.mjs` の「セットアップ」は、進め方（`/getting-started/`）のあとに `{ autogenerate: { directory: '00-setup' } }` を置く。
+`.gitignore` には Excel の一時ファイル `~$*` を足す。
+
 > レクチャーのテンプレには `__LECTURE_TITLE__` `__LECTURE_SLUG__` `__LECTURE_NAME__` `__DB_NAME__`
 > `__APP_NAME__` などレクチャー個別のプレースホルダもある。これらは 2 節でレクチャーを作るときに、
 > そのレクチャー配下だけ置換する（リポジトリ全体の一括 sed では埋めない）。
@@ -189,6 +234,8 @@ grep -rl '__REPO_NAME__\|__GH_USER__\|__SITE_TITLE__\|__SITE_DESC__\|__REPO_URL_
 - Cloudflare 系 → `templates/lecture-cloudflare/`
 - Docker + PostgreSQL 系 → `templates/lecture-node-postgres/`
 - 静的ブラウザアプリ系 → `templates/lecture-static-browser/`
+- Office マクロ系 → `templates/lecture-office-macro/`（`__LECTURE_TITLE__` / `__LECTURE_NUMBER__` を置換。
+  練習用ブックは `tools/build_workbooks.py` の `main()` にレクチャーを足して生成する）
 
 ディレクトリ名は必ず `NN-` 始まり（`01-`, `02-` …）。この番号がサイドバーの並び順になる。
 
@@ -226,10 +273,11 @@ npm install
 
 # サイト側（パッケージマネージャは pnpm。レクチャー側は npm のままで混在させてよい）
 cd site
-for p in astro @astrojs/starlight @astrojs/markdown-remark sharp rehype-external-links remark-directive; do
-  pnpm pkg set dependencies."$p"="^$(pnpm info "$p" version)"
-done
-pnpm pkg set devDependencies.archiver="^$(pnpm info archiver version)"
+# `pnpm pkg set dependencies."<name>"` は名前に `@` や `-` があると
+# ERR_PNPM_UNEXPECTED_TOKEN_IN_PROPERTY_PATH で落ちる。依存の更新は `pnpm add <name>@latest` で行う
+pnpm add astro@latest @astrojs/starlight@latest @astrojs/markdown-remark@latest sharp@latest \
+  rehype-external-links@latest remark-directive@latest
+pnpm add -D archiver@latest exceljs@latest iconv-lite@latest   # exceljs: ::sheetcode / iconv-lite: .bas の変換
 pnpm pkg set packageManager="pnpm@$(pnpm --version)"   # CI の pnpm/action-setup がここを読む
 pnpm install
 ```
@@ -271,7 +319,14 @@ docker compose exec app npm run database:seed
 # 静的ブラウザアプリ系
 cd sections/<sec>/<lec>/example
 python3 -m http.server 8000   # http://localhost:8000/（素材を読む節は file:// では動かない）
+
+# Office マクロ系（ローカルで自動実行はできない。Excel とスプレッドシートで実際に動かして確かめる）
+pip install openpyxl && python3 tools/build_workbooks.py   # 練習用ブックを作り直す
 ```
+
+Office マクロ系は、サイトのビルドが通っても **コードが Excel / GAS で動くことは保証されない**。
+Windows の Excel（.bas のインポート、PDF 書き出し）・Mac の Excel・スプレッドシート（初回の承認）で
+実際に動かしてから渡す。動かしていなければ、そう伝える。
 
 サイト:
 
@@ -307,7 +362,7 @@ pnpm run build   # 本番ビルドが通るか確認
    `container_name`）を直す。静的系は前の節の `example/` をコピーして差分だけ足す
 3. `README.md` / `LECTURE.md` を書く（`docs: true` 必須、図は `images/`、配布は `:::download`
    または `::codeview` ＋ `::preview`）
-4. `sections/README.md` の一覧にリンクを追記
+4. 新しいセクションを足したときは、トップページ（ルートの `README.md`）の「このハンズオンで作るもの」に図と説明を足す（節の一覧は書かない。セクション直下に README は作らない）
 5. `astro.config.mjs` の `sidebar` に新セクションを足したときだけ `autogenerate` のエントリを追加
    （既存セクション内のレクチャー追加なら `autogenerate` が自動で拾うので不要）
 6. `cd site && pnpm run build` で確認

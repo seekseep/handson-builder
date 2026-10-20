@@ -15,12 +15,16 @@ handson-builder で作る教材の「中身」のルール。雛形
 
 - 1 セクションは 1 つ以上のレクチャーを持つ
 - レクチャーは `README.md`（プロジェクト説明）と `LECTURE.md`（教材本文）の 2 文書を持つ
+- **セクション直下には README を置かない**（`sections/<sec>/` にはレクチャーのディレクトリだけを並べる）。
+  セクションごとに作るものはトップページ（ルートの `README.md`）の「このハンズオンで作るもの」に、
+  図と 200 字程度の説明でまとめる（節の一覧はサイドバーにあるので書かない）。
+  サイドバーではセクションの見出し（`astro.config.mjs` の `label`）の下に、レクチャーだけが並ぶ
 - 学習者はレクチャー単位で `cd` して動かし、その `LECTURE.md` に沿って手を動かす
 - ディレクトリ名は `NN-<slug>`（`01-`, `02-` …）。この番号がサイト sidebar の並び順になる
 
-## 技術スタック（3 択）
+## 技術スタック（4 択）
 
-サンプルアプリのスタックは 3 択（`SKILL.md` の「技術スタック（3 択）」で選ぶ）。1 リポジトリ内では統一する。
+サンプルアプリのスタックは 4 択（`SKILL.md` の「技術スタック（4 択）」で選ぶ）。1 リポジトリ内では統一する。
 共通ルール: **JavaScript（ESM）で書く。TypeScript は使わない**。パッケージマネージャは
 **レクチャー側が npm、サイト（`site/`）が pnpm**。レクチャーは受講者が実行するので前提を上げず
 npm のままにし、保守者しか触らないサイトだけ pnpm にする（後述「サイト（site/）の開発」）。
@@ -62,6 +66,19 @@ npm のままにし、保守者しか触らないサイトだけ pnpm にする�
 - **過剰な抽象化をしない**。設定オブジェクトを変数に切り出さず直書きし、処理は関数へ切り出さず
   上から手続き的に書く。即値の定数は使う直前に置く（先頭へ巻き上げない）
 - 解説用の小さなデモは **`<lec>/demos/<name>/index.html`**（複数可・ZIP には入らない）
+
+### Office マクロ系（Excel VBA ＋ Google Apps Script）
+
+- 主は Excel（VBA）。同じ課題を Google スプレッドシート（GAS）でも進められるよう、手順とコードを併記する
+- VBA は `Option Explicit` を付け、`Dim` で型を書く。型は `Long` / `String` / `Double` / `Date` /
+  `Worksheet` 程度に絞る。変数名は英語の lowerCamelCase、シート名・表示文字列は日本語
+- GAS は VBA と 1 対 1 で読み比べられる形にする（`getRange(i, 6).getValue()` のようにセルを 1 つずつ）。
+  `getValues` での一括処理は、それを教える節まで使わない
+- 初心者が上から順に読める形を優先する。`Function` への切り出し・配列での高速化は、それを教える節まで使わない
+- `.bas` / `.gs` には、ファイル冒頭の説明（節番号・使い方）やマクロの上の「何をするマクロか」のコメントを書かない。説明は本文に書き、コードのコメントは「なぜ」だけにする
+- 練習用ブックはマクロなしの `.xlsx`。`tools/build_workbooks.py`（openpyxl）で生成し、手で編集しない。
+  セル番地はコードと対応するので、レイアウトを変えたら両方を直す
+- VBA と GAS の書き方は `sections/00-setup/03-basics/LECTURE.md`（基本的な知識）に集約する。表で並べるのではなく、テーマごとの塊（短い説明＋ `:::::platform` で切り替えるコード）にする。最初に目を通して知識を軽く入れておき、作業中は早見表として使う想定
 
 ### SQL インジェクションなどを題材にする回
 
@@ -117,6 +134,20 @@ images/00-thumbnail.svg 先頭サムネ（+ NN-*.svg の解説図）
 ```
 
 `package.json` は置かない（パッケージマネージャを使わないため）。
+
+### Office マクロ系
+
+```text
+example/                動くコード（配布 ZIP・::codeview・::sheetcode の元）
+  data/*.xlsx           練習用ブック（tools/build_workbooks.py で生成。マクロなし）
+  vba/*.bas             VBA の完成コード（UTF-8 / LF。Attribute VB_Name 行は書かない）
+  gas/*.gs              Apps Script の完成コード（vba/ と同じ名前で対にする）
+images/00-thumbnail.svg 先頭サムネ（+ NN-*.svg の解説図）
+```
+
+`package.json` は置かない。リポジトリ直下に `tools/build_workbooks.py`、`sections/` に
+準備の章 `00-setup/`（01-excel / 02-sheets / 03-basics。`templates/office/sections/00-setup/`）を置く。準備の章には練習用ブックもコードも置かない。
+`.gitignore` には Excel の一時ファイル `~$*` を足す。
 
 ## package.json のスクリプト
 
@@ -265,8 +296,7 @@ frontmatter は付けても付けなくてもよい。付けて `docs: true` に
 2. その直後に `![title](./images/00-thumbnail.svg)` のサムネイル画像
 3. 導入文（何を作り、動かすと何が起きるか）＋必要なら解説図
 4. 以降の見出し構成は **教材の裁量**。トピックごとに自由な見出し（例: 「プロジェクトを用意する」
-   「ローカルで動かす」「公開する」）を並べる。末尾に「コラム」（深掘り）や「次の章へ」（次レクチャーへの
-   リンク）を置いてもよい
+   「ローカルで動かす」「公開する」）を並べる。末尾に「コラム」（深掘り）を置いてもよい。「次へ」の見出しや次レクチャーへのリンクは書かない（Starlight のページ下の「前へ／次へ」と重複するため）
 
 > 以前の「TODO / 学ぶこと / 説明」の 3 節固定はやめた。目標の列挙を強制せず、素直なトピック見出しで書く。
 
@@ -329,6 +359,17 @@ frontmatter は付けても付けなくてもよい。付けて `docs: true` に
 一元化され、`build-downloads.mjs`（出力名）・`build-previews.mjs`（配置名）・`libs/sentinels.mjs`
 （本文に埋めるリンク）が共有する。
 
+### Office マクロ系（`<lec>/example/vba/` か `example/gas/` を持つ）
+
+- 対象は `example/` 配下すべて（作業ツリー直読み）。ZIP 内のルートフォルダは `<lec>/`
+- `.bas` は書き出し時に `Attribute VB_Name = "<ファイル名>"` を先頭に足し、CP932 ＋ CRLF に変換する
+  （`build-downloads.mjs` の `convertForImport`。依存は `iconv-lite`）
+- 同じ章の節が同じ練習用ブックを使っても、ZIP は節ごとに出す（途中から始める人・答え合わせ用）
+- 本文には `:::download` ＋ `[...](./project.zip)` を置く（`::codeview` のパネルにもボタンが付く）
+- ZIP は全部入りの `<sec>-<lec>.zip` のほかに、環境ごとの `<sec>-<lec>-excel.zip`（data/ と vba/）と `-sheets.zip`（data/ と gas/）も出す。ダウンロードボタンは選んでいる環境の ZIP を指す（`src/plugins/lib/platform-zip.mjs`）
+- 節の末尾（`::codeview`）でダウンロードできるのは、その節を終えた状態のコード
+- git 管理外（`git init` 前）でも出力できる。project 方式だけは git 追跡が前提なので、git が無いと警告して飛ばす
+
 ## 本文センチネル（`::codeview` / `::preview` / `::assets`）
 
 `example/` を持つレクチャーでは、本文に**行頭のセンチネル**を書くと、`sync-lectures.mjs`
@@ -348,6 +389,8 @@ frontmatter は付けても付けなくてもよい。付けて `docs: true` に
 | `::preview{height="320"}` | iframe の高さ（px）を上書きする（既定は CSS の 480px） |
 | `::assets` | `example/assets/` を配る ZIP のボタン ＋ 中身のファイル名一覧 |
 | `::assets[ラベル]` | ボタンの文言を上書きする（既定は「素材をダウンロード」） |
+| `::sheetcode{book="data/x.xlsx" code="Name" macro="Sub名"}` | Office マクロ系。左に VBA ／ GAS のコード（`vba/Name.bas` と `gas/Name.gs`。`macro` でその Sub と対応する function だけを切り出す）、右に練習用ブックのシート。`sheet` / `range` / `highlight` / `src` も書ける |
+| `::::sheetdemo[キャプション]{book="..." range="..."}` 〜 `::::` | Office マクロ系。実行前のシートを描き、「▶ 実行」で中に書いた値（`C2:C6 = 600, 900, …` / `J2 = 68580`）に切り替える。コードは実際には動かさない。`book` を省略すると空白のシート。中に `msgbox = 文言`（GAS 用は `msgbox.sheets = 文言`）と書くと MsgBox ／ alert 風の小窓も出す。`macro="Hello"` を付けると、Excel は画面の中のリボン（「開発」→「マクロ」）から一覧で選んで「実行」、GAS はシートの上の Apps Script エディタで関数を選んで「▶ 実行」という実際の操作をなぞってから結果を出す（一覧は `macros="A,B"`）。中には `before 範囲 = 値`（実行前の値）、`log = …` / `log.sheets = …`（イミディエイト ウィンドウ ／ 実行ログ）、`tabs = 名前, …`（実行で増えるシート。`新しいシート <- 元のシート` で元のシートをコピーした中身にする。`openTab="added"` で増えたシートを選ぶ）、`シート名!A5 = 値`（選んでいるシート以外、増えるシートを含む、の中身）も書ける。ブックの全シートを描き、見出しで切り替えられる。下端の帯で縦に広げられ、「⛶ 全画面」で画面いっぱいに出せる。範囲（`range`）は書かず、シート全体を描くのを基本にする |
 
 書き方のルール:
 
@@ -355,14 +398,44 @@ frontmatter は付けても付けなくてもよい。付けて `docs: true` に
 - `::codeview` はレクチャーの末尾に置く。その直前に `::preview` を置くと「動かして確認 → 完成例を見る」
   の流れになる。デモを解説する節では `::preview{demo="<name>"}` と
   `::codeview{path="demos/<name>"}` を対にする
-- パネルに全文表示されるのは `.html` / `.js` / `.css` / `.json`。ファイル順は `index.html` → `main.js` →
-  残りは名前順
+- パネルに全文表示されるのは `.html` / `.js` / `.css` / `.json` と、Office マクロ系の `.bas`（vb）/ `.gs`（js）。
+  ファイル順は `index.html` → `main.js` → `vba/` → `gas/` → 残りは名前順
+- `::sheetcode` / `::::sheetdemo` は `site/scripts/libs/sheets.mjs` が ExcelJS で `.xlsx` を読んで展開する
+  （書式・数式も描く。数式バーはクリックしたセルの式を出す）
+- シート表示の中で環境ごとに出し分ける部品（アプリ名、空白のブックの名前、小窓、リボン ／ Apps Script エディタ）は
+  `sheet__only--excel` / `sheet__only--sheets` のクラスを付けるだけにし、表示の切り替えは `sheet.css` の 1 ルールに任せる
 - `::assets` は `example/assets/` が無いと警告を出して行ごと消える（ビルドは落ちない）
-- `LECTURE.md` 以外（ルートの `README.md`、`sections/<sec>/README.md` など）で使えるのは
-  `::preview{src="<sec>/<lec>"}` だけ。自分の `example/` を持たないので、`::codeview` /
+- `LECTURE.md` 以外（ルートの `README.md`、`sections/README.md` など）で使えるのは
+  `::preview{src="<sec>/<lec>"}` と、`src="<sec>/<lec>"` でブックのあるレクチャーを指した `::::sheetdemo`（`book` を省略した空白のシートなら `src` も要らない）だけ。自分の `example/` を持たないので、`::codeview` /
   `::assets` と行き先の無い `::preview` は警告を出して消える
 - プレビューには「↻ 再読み込み」と「↗ 新しいタブで開く」が付く。開発者ツールを開いて
   確かめる節では、本文から後者を使うよう促す
+
+## よくある質問（`:::faq`）
+
+節の末尾に、受講者がつまずきやすいところを「よくある質問」として置く（`src/plugins/remark-faq.mjs` /
+`src/styles/faq.css`。雛形は seekseep/web-rtc-handson）。開閉はブラウザの `<details>` なのでスクリプトは要らない。
+
+```markdown
+:::faq
+
+### total = 0 は書かなくても動くのでは？
+
+答えの本文。段落・リスト・コードなど、普通のマークダウンが書ける。
+
+### つぎの質問
+
+答え。
+
+:::
+```
+
+- **節の一番最後に置く**（`::codeview` の完成コードや `:::questions` のクイズよりも後ろ）
+- **見出しが質問、次の見出しまでが答え**。見出しの深さは問わない（本文では `###`）。行頭の「Q」「A」は CSS が付けるので書かない
+- 「よくある質問」の見出し（`<h2>`）は自動で付く。`## よくある質問` を自分で書かない。題を変えたいときは `:::faq[この節でよく聞かれること]`
+- 質問の見出しは `<summary>` になるので、ページ右の目次には出ない
+- 答えの中で `:::notice` などを使うときは、外側のコロンを増やして `::::faq` にする
+- 生の `<details>` / `<summary>` で書かない（見た目がそろわず、`<summary>` の中ではマークダウンが効かない）
 
 ## 本文に「どこに書くか」を示す（`:::code`）
 
@@ -381,6 +454,40 @@ const bird = this.add.circle(140, 340, 18, 0xffffff);
 - `newOffset` を足すと差分モードになる。`+` / `-` 付きのコードを書くと旧・新 2 列の行番号が出る
 - 描画は Expressive Code に任せ、行番号だけ自作プラグイン `src/plugins/ec-line-numbers.mjs` が足す
   （`astro.config.mjs` の `expressiveCode.plugins` に登録済み）。他のコードブロックには影響しない
+
+## Excel ／ スプレッドシートの切り替え（`:::::platform`）
+
+Office マクロ系で、環境によって手順やコードが分かれる箇所だけを囲む（`src/plugins/remark-platform.mjs`）。
+
+````markdown
+:::::platform
+::::excel
+Excel の手順。
+
+```vb
+Sub Hello()
+    MsgBox "こんにちは"
+End Sub
+```
+::::
+::::sheets
+スプレッドシートの手順。
+::::
+:::::
+````
+
+- 外側ほどコロンを多くする（`:::::platform` > `::::excel` / `::::sheets` > `:::code` / `:::warning`）。
+  同じ数だと内側が外側を閉じてしまう
+- パネルの中のコードブロックには自動で行番号が付き、パネルの端まで広げて外側の余白と枠線をなくす（`remark-platform.mjs` / `platform.css`）。`::codeview` のパネルも、選んでいる環境のファイル（`vba/` か `gas/`）だけを一覧に出す
+- 各節に `::::sheetdemo` を 1 つ以上置き、その節のマクロを動かしたときの様子を見せる
+- トップページ（ルートの `README.md`）の「このハンズオンで作るもの」には、章ごとに図と 200 字程度の説明を置く。デモは、章の成果が一目で分かるものだけ `::::sheetdemo{src=...}` で置く（全章には出さない）（図は各章の最初の節の `images/` に置いて参照する。節の外の画像は push するまでサイトに出ないため）
+- 片方だけでもよい（Excel にしか無い操作は `::::excel` だけ）。そのときは、どちらの環境を選んでいても表示する。
+  ページ全体が片方の環境だけの話（準備の章の 01-excel / 02-sheets など）なら、`:::::platform` で囲まない
+- Office マクロ系では `sections/README.md`（`/getting-started/`）を「Excel と Google スプレッドシート」のページにし、両方に対応していることと環境の選び方だけを書く。冒頭に `::platform-choice` を置く。環境を選ぶ大きなボタン 2 つになり、ナビゲーションバーの選択欄と連動する
+- **切り替えはナビゲーションバーの選択欄（と進め方の `::platform-choice`）だけ**（`src/components/ThemeSelect.astro` で Starlight のテーマ切り替えを差し替え、その左に置く）。本文のブロックにはタブを出さず、選んでいる環境の中身だけを表示する。環境はページの途中で頻繁に変えるものではないため
+- 選んだ環境は `<html data-platform>` と localStorage に持ち、全ページがそろって切り替わる
+  （`src/scripts/platform-client.js`）。既定は Excel。`::codeview` のパネルも、開いているファイルの
+  相方（`vba/X.bas` ⇔ `gas/X.gs`）に切り替わる。`::sheetcode` のコードも、選んでいる環境のものだけを出す
 
 ### 解説用デモ（`demos/`）
 
@@ -421,7 +528,13 @@ pnpm run build    # 本番ビルド（prebuild で同じ3つが走る）
 
 バージョンは `site/package.json` の `packageManager` で固定する。CI の `pnpm/action-setup` が
 ここを読むので、scaffold 時に `pnpm pkg set packageManager="pnpm@$(pnpm --version)"` を実行する。
+依存の更新は `pnpm add <name>@latest` で行う（`pnpm pkg set dependencies."@scope/name"` は `@` や `-` を含む名前で失敗する）。
 ワークフローでは `package_json_file: site/package.json` の指定が必要（既定はリポジトリルートを見る）。
+
+
+> remark プラグインや `site/src/scripts/*.js`（head に inline 注入するクライアント）を書き換えたら、dev サーバーを止めて
+> `site/node_modules/.astro/`（content layer の data-store.json）と `site/.astro/` を消してから起動し直す。
+> 前者が残っていると古い変換結果のまま描画され、後者のクライアントは astro.config.mjs が起動時にしか読まない。
 
 ### 依存更新で踏みやすい3点
 
@@ -459,7 +572,7 @@ pnpm run build    # 本番ビルド（prebuild で同じ3つが走る）
 | `README.md`（ルート） | `/` |
 | `sections/README.md` | `/getting-started/` |
 | `sections/<name>.md`（例 `DOCKER.md`） | `/<name>/`（小文字） |
-| `sections/<sec>/README.md` | `/<sec>/` |
+| `sections/<sec>/README.md` | `/<sec>/`（sync は対応しているが、規約では作らない） |
 | `sections/<sec>/<lec>/LECTURE.md` | `/<sec>/<lec>/` |
 
 frontmatter で `title` / `sidebar.label` / `sidebar.order` を上書きできる。`LECTURE.md` の

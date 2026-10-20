@@ -26,6 +26,8 @@
  *   ::preview{height="220"}        iframe の高さ（px）を上書きする（既定は CSS の 480px）。
  *   ::preview[キャプション]{...}    figcaption を付けられる。
  *
+ *   ::::sheetdemo / ::sheetcode … スプレッドシートの表示。書き方は sheets.mjs を参照。
+ *
  * 生成物: エディタは `::::editor{...}` コンテナ（remark-editor.mjs が <section class="editor">
  * に変換）＋コードフェンス。プレビューは生 HTML の <figure><iframe></figure>。
  */
@@ -34,7 +36,9 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { walkFiles } from './fs-walk.mjs';
+import { ROOT } from './paths.mjs';
 import { assetsDownloadUrlFor, downloadUrlFor, previewUrlFor } from './naming.mjs';
+import { expandSheetSentinels } from './sheets.mjs';
 
 const CODEVIEW_RE = /^::codeview(?:\[([^\]]*)\])?(?:\{([^}]*)\})?\s*$/;
 const PREVIEW_RE = /^::preview(?:\[([^\]]*)\])?(?:\{([^}]*)\})?\s*$/;
@@ -48,26 +52,25 @@ const IGNORE_NAMES = new Set(['.DS_Store']);
 
 // エディタに全文表示する（＝学習者が書く）コードの拡張子。
 const CODE_EXT = new Map([
+  // VBA の標準モジュール（VBE の「ファイルのインポート」で読める形式）と Apps Script。
+  ['.bas', 'vb'],
+  ['.gs', 'js'],
   ['.html', 'html'],
   ['.js', 'js'],
   ['.css', 'css'],
   ['.json', 'json'],
 ]);
 
-// ファイル一覧の並び順（この順に先頭へ寄せる。残りは名前順）。
-const PRIORITY = ['index.html', 'main.js'];
+// ファイル一覧の並び順。Excel が主なので vba/ を先、gas/ を後に寄せる。残りは名前順。
+const PRIORITY_DIRS = ['vba/', 'gas/'];
+
+function rank(rel) {
+  const i = PRIORITY_DIRS.findIndex((dir) => rel.startsWith(dir));
+  return i === -1 ? PRIORITY_DIRS.length : i;
+}
 
 function sortFiles(rels) {
-  return rels.slice().sort((a, b) => {
-    const ai = PRIORITY.indexOf(a);
-    const bi = PRIORITY.indexOf(b);
-    if (ai !== -1 || bi !== -1) {
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    }
-    return a.localeCompare(b);
-  });
+  return rels.slice().sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
 
 /** `key="value"` 形式のディレクティブ属性文字列を { key: value } に。 */
@@ -146,7 +149,7 @@ async function buildAssetsBlock({ exampleAbs, sec, lec, base, label }) {
     `<span class="download-button__label">${label || '素材をダウンロード'}</span>` +
     `</a>` +
     `<p class="assets-download__files">中身（${files.length} ファイル）: ${list}` +
-    `<br />解凍してできる <code>assets/</code> を <code>game/</code> の中に置いてください。</p>` +
+    `</p>` +
     `</div>`
   );
 }
@@ -183,8 +186,16 @@ export async function expandSentinels(body, { lectureAbsDir, sec, lec, base, whe
   const inLecture = Boolean(sec && lec);
   const where = inLecture ? `sections/${sec}/${lec}` : (label || 'docs');
   // レクチャー以外では、センチネルが1つも無ければ何もしない。
-  if (!inLecture && !/^::(codeview|preview|assets)\b/m.test(body)) return body;
+  if (!inLecture && !/^::(codeview|preview|assets|::sheetdemo|sheetcode)\b/m.test(body)) return body;
   const exampleAbs = inLecture ? path.join(lectureAbsDir, EXAMPLE_DIR) : null;
+  // `::::sheetdemo` / `::sheetcode`（スプレッドシート表示）は sheets.mjs で展開する。
+  // レクチャー以外（概要ページなど）では、src="<sec>/<lec>" で指したレクチャーのブックを使う。
+  // lectureDirFor は「自分のレクチャー/../../<src>」で探すので、sections/ 直下の仮の位置を渡す。
+  body = await expandSheetSentinels(body, {
+    lectureAbsDir: inLecture ? lectureAbsDir : path.join(ROOT, 'sections', '_', '_'),
+    where,
+    parseAttrs,
+  });
 
   const lines = body.split('\n');
   const out = [];

@@ -23,6 +23,8 @@ function findFirstLink(node) {
   return null;
 }
 
+import { platformZips } from './lib/platform-zip.mjs';
+
 /** containerDirective を再帰的に拾うシンプルな visitor。 */
 function visit(node, callback) {
   if (!node || !Array.isArray(node.children)) return;
@@ -41,6 +43,40 @@ export default function remarkDownload() {
       const link = findFirstLink(node);
       if (!link) return;
 
+      // ボタンの中身: アイコン（CSS で描画）＋ ラベル（元リンクのテキスト）。
+      const inner = () => [
+        {
+          type: 'downloadButtonIcon',
+          data: {
+            hName: 'span',
+            hProperties: { className: ['download-button__icon'], 'aria-hidden': 'true' },
+          },
+        },
+        {
+          type: 'downloadButtonLabel',
+          data: { hName: 'span', hProperties: { className: ['download-button__label'] } },
+          // ボタンを 2 つ作るときに同じノードを共有しないよう、毎回複製する。
+          children: structuredClone(link.children),
+        },
+      ];
+
+      // Office マクロ系で環境ごとの ZIP があるときは、Excel 用とスプレッドシート用のボタンを両方作り、
+      // 選んでいる環境のほうだけを見せる（platform.css の platform-only--*）。
+      const variants = platformZips(link.url);
+      if (variants) {
+        node.type = 'downloadButtons';
+        node.data = { hName: 'span', hProperties: { className: ['download-buttons'] } };
+        node.children = variants.map((v) => ({
+          type: 'downloadButton',
+          data: {
+            hName: 'a',
+            hProperties: { className: ['download-button', `platform-only--${v.platform}`], href: v.url, download: true },
+          },
+          children: inner(),
+        }));
+        return;
+      }
+
       const data = node.data || (node.data = {});
       node.type = 'downloadButton';
       data.hName = 'a';
@@ -49,23 +85,7 @@ export default function remarkDownload() {
         href: link.url,
         download: true,
       };
-
-      // アイコン（CSS で描画）＋ ラベル（元リンクのテキスト）に組み替える。
-      node.children = [
-        {
-          type: 'downloadButtonIcon',
-          data: {
-            hName: 'span',
-            hProperties: { className: ['download-button__icon'], 'aria-hidden': 'true' },
-          },
-          children: [],
-        },
-        {
-          type: 'downloadButtonLabel',
-          data: { hName: 'span', hProperties: { className: ['download-button__label'] } },
-          children: link.children,
-        },
-      ];
+      node.children = inner();
     });
   };
 }

@@ -45,7 +45,7 @@ const PUBLISH_FLAG = 'docs';
  * build-downloads.mjs は project 方式 (package.json) と example 方式 (example/index.html) の
  * どちらにも ZIP を出すので、両方を対象にする。
  */
-const ZIP_MARKERS = ['package.json', 'example/index.html'];
+const ZIP_MARKERS = ['package.json', 'example/index.html', 'example/vba', 'example/gas'];
 
 async function resolveDownloadUrl(sourceDir, base) {
   const parsed = parseLectureRel(sourceDir);

@@ -1,0 +1,159 @@
+/* よくある質問（remark-faq.mjs が生成する `.faq`）。
+   開閉はブラウザの <details> がやるので JS は無い。
+   Starlight のテーマ変数（--sl-color-*）を使い、ライト／ダーク両対応。
+
+   NOTE: Starlight は `.sl-markdown-content details / summary` に独自の装飾
+   （左の縦線・左向きの三角マーカー）を当てている。セレクタの詳細度がこちら以上
+   なので、クラスを 2 つ重ねた形（`.faq .faq-item` など）で上書きする。
+   マーカーは `summary::before` を乗っ取っているため、`content` だけでなく
+   mask / 背景 / 大きさも打ち消す必要がある。 */
+
+.faq {
+  margin: 2.5rem 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--sl-color-gray-5);
+}
+
+.faq .faq-title {
+  margin: 0 0 1rem;
+  font-size: var(--sl-text-h4);
+  line-height: var(--sl-line-height-headings);
+  color: var(--sl-color-white);
+}
+
+.faq .faq-lead {
+  margin-bottom: 1rem;
+  color: var(--sl-color-gray-2);
+}
+
+.faq .faq-item {
+  /* border は Starlight の border-inline-start（左の縦線）ごと上書きする。 */
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  padding-inline-start: 0;
+  background-color: var(--sl-color-black);
+}
+
+/* 隣り合う項目は枠線を 1 本ぶん重ねて、1 枚のリストに見せる。 */
+.faq .faq-item + .faq-item {
+  margin-top: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.faq .faq-item:has(+ .faq-item) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* 開いている項目は、重なり順で手前に出して枠線を見せる。 */
+.faq .faq-item[open] {
+  position: relative;
+  z-index: 1;
+  border-color: var(--sl-color-gray-4);
+}
+
+/* 質問（クリックで開く行）。 */
+.faq .faq-question {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--sl-color-white);
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq .faq-question::marker,
+.faq .faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq .faq-item[open] > .faq-question {
+  margin-bottom: 0;
+}
+
+.faq .faq-question:hover {
+  color: var(--sl-color-accent-high);
+}
+
+.faq .faq-question:focus-visible {
+  outline: 2px solid var(--sl-color-accent-high);
+  outline-offset: -2px;
+  border-radius: 0.5rem;
+}
+
+/* 行頭の「Q」。Starlight が同じ ::before に三角マーカーを描いているので、
+   content 以外（mask・背景・大きさ・余白・回転）も残らず打ち消す。 */
+.faq .faq-question::before {
+  content: 'Q';
+  display: inline;
+  flex: none;
+  width: auto;
+  height: auto;
+  margin: 0;
+  background: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+  transform: none;
+  vertical-align: baseline;
+  font-size: var(--sl-text-sm);
+  font-weight: 700;
+  color: var(--sl-color-accent-high);
+}
+
+.faq .faq-item[open] > .faq-question::before {
+  transform: none;
+}
+
+/* 右端の山形。開くと上向きに回る。 */
+.faq .faq-question::after {
+  content: '';
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-inline-start: auto;
+  border-inline-end: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.15rem) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.faq .faq-item[open] > .faq-question::after {
+  transform: translateY(0.1rem) rotate(-135deg);
+}
+
+/* 答え。行頭の「A」を 1 列目に置き、本文はすべて 2 列目に流す
+   （段落が複数あっても「A」の下にぶら下がらないように grid-column を固定する）。 */
+.faq .faq-answer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 0.6rem;
+  padding: 0 1rem 1rem;
+  color: var(--sl-color-gray-2);
+}
+
+.faq .faq-answer::before {
+  content: 'A';
+  grid-column: 1;
+  grid-row: 1;
+  font-size: var(--sl-text-sm);
+  font-weight: 700;
+  line-height: 1.75;
+  color: var(--sl-color-gray-3);
+}
+
+.faq .faq-answer > * {
+  grid-column: 2;
+}
+
+.faq .faq-answer > :first-child {
+  margin-top: 0;
+}
+
+.faq .faq-answer > :last-child {
+  margin-bottom: 0;
+}

@@ -1,0 +1,88 @@
+/* `:::::platform`（remark-platform.mjs）の Excel ／ スプレッドシートのパネル。
+   どちらを出すかは <html data-platform="excel|sheets">（ナビゲーションバーの選択欄と
+   platform-client.js）で決める。既定（未選択を含む）は Excel。
+   枠や背景は付けず、本文の一部としてそのまま流す。 */
+
+.platform__panel > :first-child {
+  margin-top: 0;
+}
+
+/* Starlight の本文の間隔（直下の要素どうしの 1rem）を、パネルの中でもそろえる。 */
+.platform__panel > * + * {
+  margin-top: 1rem;
+}
+
+:root:not([data-platform='sheets']) .platform__panel--sheets,
+:root[data-platform='sheets'] .platform__panel--excel {
+  display: none;
+}
+
+/* 片方の環境にしか無い手順は、どちらを選んでいても出す。 */
+.platform--only-excel .platform__panel--excel,
+.platform--only-sheets .platform__panel--sheets {
+  display: block !important;
+}
+
+/* `::codeview` のパネルでは、選んでいる環境のファイルだけを一覧に出す。
+   開くファイルの切り替えは platform-client.js の syncEditors が受け持つ。 */
+:root:not([data-platform='sheets']) .editor__file[data-file^='gas/'],
+:root[data-platform='sheets'] .editor__file[data-file^='vba/'] {
+  display: none;
+}
+
+/* `::platform-choice`（進め方のページの冒頭）の、環境を選ぶ大きなボタン。 */
+.platform-choice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.platform-choice__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1.1rem;
+  border: 2px solid var(--sl-color-gray-5);
+  border-radius: 0.6rem;
+  background: var(--sl-color-black);
+  color: var(--sl-color-white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.platform-choice__option:hover {
+  border-color: var(--sl-color-gray-3);
+}
+
+.platform-choice__name {
+  font-size: var(--sl-text-lg);
+  font-weight: 700;
+}
+
+.platform-choice__desc {
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm);
+}
+
+/* 選んでいるほうを強調する（既定は Excel）。 */
+:root:not([data-platform='sheets']) .platform-choice__option--excel,
+:root[data-platform='sheets'] .platform-choice__option--sheets {
+  border-color: var(--sl-color-accent);
+  background: color-mix(in srgb, var(--sl-color-accent) 10%, var(--sl-color-black));
+}
+
+:root:not([data-platform='sheets']) .platform-choice__option--excel .platform-choice__name::after,
+:root[data-platform='sheets'] .platform-choice__option--sheets .platform-choice__name::after {
+  content: '  ✓ 選択中';
+  color: var(--sl-color-accent-high);
+  font-size: var(--sl-text-sm);
+  font-weight: 600;
+}
+
+/* 環境ごとのダウンロードボタン（remark-download / remark-editor）。選んでいる環境のほうだけを出す。 */
+:root:not([data-platform='sheets']) .platform-only--sheets,
+:root[data-platform='sheets'] .platform-only--excel {
+  display: none !important;
+}

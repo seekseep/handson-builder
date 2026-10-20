@@ -10,6 +10,9 @@ import remarkDownload from './src/plugins/remark-download.mjs';
 import remarkEditor from './src/plugins/remark-editor.mjs';
 import remarkScript from './src/plugins/remark-script.mjs';
 import remarkCode from './src/plugins/remark-code.mjs';
+import remarkFaq from './src/plugins/remark-faq.mjs';
+import remarkPlatform from './src/plugins/remark-platform.mjs';
+import remarkSheetcode from './src/plugins/remark-sheetcode.mjs';
 import ecLineNumbers from './src/plugins/ec-line-numbers.mjs';
 import lectureSync from './src/integrations/lecture-sync.mjs';
 
@@ -34,6 +37,19 @@ const editorClient = readFileSync(
 // `:::script` の実行 client（<script type="text/plain" class="run-on-load"> を実行）。
 const runScripts = readFileSync(
   fileURLToPath(new URL('./src/scripts/run-scripts.js', import.meta.url)),
+  'utf8',
+);
+
+// `:::::platform`（Office マクロ系の Excel ／ スプレッドシート切り替え）の client。全ページに inline 注入。
+// 使わないスタックでも、`.platform` が無いページでは何もしない。
+const platformClient = readFileSync(
+  fileURLToPath(new URL('./src/scripts/platform-client.js', import.meta.url)),
+  'utf8',
+);
+
+// `::::sheetdemo` / `::sheetcode` のシート表示（実行・リセット・数式バー）の client。全ページに inline 注入。
+const sheetClient = readFileSync(
+  fileURLToPath(new URL('./src/scripts/sheet-client.js', import.meta.url)),
   'utf8',
 );
 
@@ -67,6 +83,12 @@ function calloutIntegration() {
         config.markdown.processor?.options.remarkPlugins.push(remarkScript);
         // `:::code{filepath=... offset=...}` をファイル名 + 行番号つきコードに変換。
         config.markdown.processor?.options.remarkPlugins.push(remarkCode);
+        // `:::faq` を開いて読む「よくある質問」（<details>）に変換。名前衝突なし。
+        config.markdown.processor?.options.remarkPlugins.push(remarkFaq);
+        // `:::::platform` を Excel ／ スプレッドシートの切り替えタブに変換。名前衝突なし。
+        config.markdown.processor?.options.remarkPlugins.push(remarkPlatform);
+        // `::::sheetcode`（sync 時に `::sheetcode` から生成）をコードとシートの横並びに変換。
+        config.markdown.processor?.options.remarkPlugins.push(remarkSheetcode);
       },
     },
   };
@@ -105,7 +127,15 @@ export default defineConfig({
         './src/styles/download.css',
         './src/styles/editor.css',
         './src/styles/code.css',
+        './src/styles/faq.css',
+        './src/styles/platform.css',
+        './src/styles/sheet.css',
       ],
+      // テーマ切り替えの左に Excel ／ スプレッドシートの切り替えを置く（Office マクロ系）。
+      // 使わないスタックでは、この components ごと消してよい。
+      components: {
+        ThemeSelect: './src/components/ThemeSelect.astro',
+      },
       // `:::code` が付けた startLineNumber / startNewLineNumber を読んで
       // ガターに行番号を出す自作プラグイン。それ以外のコードブロックには何もしない。
       expressiveCode: {
@@ -120,6 +150,10 @@ export default defineConfig({
         { tag: 'script', content: runScripts },
         // `::preview` の再読み込みボタン client。
         { tag: 'script', content: previewClient },
+        // Excel ／ スプレッドシート切り替えの client。
+        { tag: 'script', content: platformClient },
+        // `::::sheetdemo` / `::sheetcode` のシート表示の client。
+        { tag: 'script', content: sheetClient },
       ],
       defaultLocale: 'root',
       locales: {
@@ -143,6 +177,8 @@ export default defineConfig({
         // レクチャーのセクションを追加したらここに足す。
         // Starlight v0.39+ では autogenerate を items 配列に入れる（label と autogenerate を同階層に書けない）。
         { label: '01. はじめの一歩', items: [{ autogenerate: { directory: '01-basics' } }] },
+        // 過去のハンズオンの一覧（sections/PAST-HANDSON.md）。セクションを足したら、この上に足す。
+        { label: '過去のハンズオン', link: '/past-handson/' },
       ],
       editLink: {
         baseUrl: `${repoUrl}/edit/main/`,

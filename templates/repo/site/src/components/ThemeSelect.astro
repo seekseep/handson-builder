@@ -1,0 +1,39 @@
+---
+/**
+ * Starlight のテーマ切り替え（ThemeSelect）を差し替えて、その左に
+ * Excel（VBA）／ スプレッドシート（GAS）の切り替えを置く。
+ *
+ * 環境はページの途中で頻繁に変えるものではないので、切り替えはここ 1 か所だけにする。
+ * 本文の `:::::platform` はタブを出さず、選んでいる環境の中身だけを表示する（platform.css）。
+ * 選んだ環境の反映と保存は site/src/scripts/platform-client.js（全ページに inline 注入）。
+ */
+import Select from '@astrojs/starlight/components/Select.astro';
+import Default from '@astrojs/starlight/components/ThemeSelect.astro';
+---
+
+<handson-platform-select>
+  <Select
+    icon="document"
+    label="教材の環境"
+    options={[
+      { label: 'Excel（VBA）', value: 'excel', selected: true },
+      { label: 'スプレッドシート（GAS）', value: 'sheets', selected: false },
+    ]}
+    width="15em"
+  />
+</handson-platform-select>
+<Default />
+
+<script is:inline>
+  // 描画前に保存済みの環境へ合わせ、選択欄の表示がちらつかないようにする。
+  (function () {
+    var select = document.currentScript.previousElementSibling.previousElementSibling.querySelector('select');
+    if (select) select.value = document.documentElement.dataset.platform === 'sheets' ? 'sheets' : 'excel';
+  })();
+</script>
+
+<style>
+  handson-platform-select {
+    display: contents;
+  }
+</style>
