@@ -323,6 +323,20 @@ frontmatter は付けても付けなくてもよい。付けて `docs: true` に
 
 - `00-thumbnail.svg` を先頭サムネにし、本文冒頭に置く。以降は `01-*.svg`, `02-*.svg` … と番号付き
 - 作図は [genfig](genfig) スキルを使う（twemoji を登場物にした FigJam 風 SVG）
+- genfig はリポジトリに **サブモジュール** で `.claude/skills/genfig` に入れる（`git submodule add https://github.com/seekseep/genfig-skill.git .claude/skills/genfig`）。
+  `~/.claude/skills/` は使わない。教材で使う git のスキルは、同じようにすべてサブモジュールで `.claude/skills/<name>` に入れる
+- 図の元は `images/NN-xxx.py` に置き、同じ名前の `.svg` を書き出す。`.py` の冒頭では、リポジトリの中の genfig を読み込む:
+
+  ```python
+  import sys
+  from pathlib import Path
+
+  sys.path.insert(0, str(next(p / ".claude/skills/genfig" for p in Path(__file__).resolve().parents
+                              if (p / ".claude/skills/genfig").is_dir())))
+  from genfig import Canvas  # noqa: E402
+  ```
+
+- SVG は `xmllint --noout` を通し、描き出して目で確かめる（属性が重なった SVG はブラウザで表示されない）
 - 埋め込みは `![説明（何を表す図か）](./images/NN-xxx.svg)`。alt には図の意味を書く
 - 画像は Astro の Sharp を通さず、サイトでは GitHub raw URL、GitHub では相対で解決される
   （Sharp で落ちる形式が要るときだけ `libs/links.mjs` の `PUBLIC_ASSETS` 経由で `site/public/` に逃がす）

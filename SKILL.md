@@ -227,6 +227,19 @@ Office マクロ系のときは、さらに `templates/office/sections/*` を `s
 > `__APP_NAME__` などレクチャー個別のプレースホルダもある。これらは 2 節でレクチャーを作るときに、
 > そのレクチャー配下だけ置換する（リポジトリ全体の一括 sed では埋めない）。
 
+教材づくりで使うスキルのうち、git で配っているもの（図の genfig＝`seekseep/genfig-skill` など）は、
+リポジトリに **サブモジュール** として `.claude/skills/<name>` に入れる。ホームの `~/.claude/skills/` に頼らず、
+clone した環境ならどこでも同じ版のスキルで描き直せるようにするため。
+
+```bash
+git submodule add https://github.com/seekseep/genfig-skill.git .claude/skills/genfig
+```
+
+- clone は `git clone --recurse-submodules`、clone 済みなら `git submodule update --init`
+- 図の `images/NN-xxx.py` は、ファイルの場所から上へたどって `.claude/skills/genfig` を読み込む（「図（genfig）」）
+- スキルを直すときは、スキルのリポジトリに PR を出してマージし、サブモジュールを更新してから使う
+- リポジトリの `.claude/AGENTS.md` に、サブモジュールの取り方と、どのスキルを入れているかを書く
+
 ### 2. レクチャーを 1 つ作る（テンプレからコピー）
 
 選んだスタックのテンプレを `sections/<NN-section>/<NN-lecture>/` にコピーする:
